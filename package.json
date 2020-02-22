@@ -2,11 +2,32 @@
   "name": "rss-link",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
   "scripts": {
+    "start": "webpack-dev-server",
+    "dev": "npm run start",
+    "build": "webpack",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "author": "w4ctech",
+  "license": "ISC",
+  "dependencies": {
+    "vue": "^3.0.0-alpha.5"
+  },
+  "devDependencies": {
+    "@vue/compiler-sfc": "^3.0.0-alpha.5",
+    "axios": "^0.19.2",
+    "css-loader": "^3.4.2",
+    "html-webpack-plugin": "^3.2.0",
+    "less": "^3.11.1",
+    "less-loader": "^5.0.0",
+    "mini-css-extract-plugin": "^0.9.0",
+    "normalize.css": "^8.0.1",
+    "vue-loader": "^16.0.0-alpha.3",
+    "webpack": "^4.41.6",
+    "webpack-cli": "^3.3.11",
+    "webpack-dev-server": "^3.10.3",
+    "dayjs": "^1.8.16",
+    "vue-router": "^3.0.1"
+  }
 }
