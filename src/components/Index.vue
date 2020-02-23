@@ -6,61 +6,89 @@
         </div>
         <div  class="search-modal" v-show="state.showCate">
             <div class="tag-group">
-                <div class="title-box">
-                    <div>热门搜索</div>
-                    <ul>
-                        <li
-                            v-for="(item, index) in HotWords"
+                <dl class="title-box">
+                    <div class="group__title">
+                        <dt>热门搜索</dt>
+                    </div>
+                    <dd
+                        class="van-cell"
+                        v-for="(item, index) in HotWords"
+                        :key="index"
+                        @click="handlerCate(item)"
+                    >
+                        {{item}}
+                    </dd>
+                </dl>
+                <dl class="title-box">
+                    <div class="group__title">
+                        <dt>发布时间</dt>
+                    </div>
+                    <dd
+                        class="van-cell"
+                        v-for="(item, index) in Ranges"
+                        :key="index"
+                        @click="handlerCate(item)"
+                    >
+                        {{item.text}}
+                    </dd>
+                </dl>
+                <dl class="title-box">
+                    <div class="group__title">
+                        <dt>文章来源</dt>
+                    </div>
+                    <dd
+                            class="van-cell"
+                            v-for="(item, index) in Rss"
                             :key="index"
                             @click="handlerCate(item)"
-                        >
-                            {{item}}
-                        </li>
-                    </ul>
-                </div>
-                <div class="title-box">
-                    <div>发布时间</div>
-                    <ul>
-                        <li
-                            v-for="(item, index) in Ranges"
+                    >
+                        {{item.title}}
+                    </dd>
+                </dl>
+                <dl class="title-box">
+                    <div class="group__title">
+                        <dt>文章分类</dt>
+                    </div>
+                    <dd
+                            class="van-cell"
+                            v-for="(item, index) in Tags"
                             :key="index"
                             @click="handlerCate(item)"
-                        >
-                            {{item.text}}
-                        </li>
-                    </ul>
-                </div>
-                <div class="title-box">
-                    <div>文章来源</div>
-                    <ul>
-                        <li
-                                v-for="(item, index) in Rss"
-                                :key="index"
-                                @click="handlerCate(item)"
-                        >
-                            {{item.title}}
-                        </li>
-                    </ul>
-                </div>
-                <div class="title-box">
-                    <div>文章分类</div>
-                    <ul>
-                        <li
-                                v-for="(item, index) in Tags"
-                                :key="index"
-                                @click="handlerCate(item)"
-                        >
-                            {{item.tag}}
-                        </li>
-                    </ul>
-                </div>
+                    >
+                        {{item.tag}}
+                    </dd>
+                </dl>
             </div>
         </div>
         <div class="search-box">
             <div slot="label" class="action-cate" @click="SetshowCate"><span class="lbl">筛选</span></div>
             <div slot="action" class="action-btn" @click="onSearch">搜索</div>
         </div>
-        <div class="result-box"></div>
+        <div class="result-box">
+
+            <div class="empty" v-if="isLoad && !results.length">
+                <div class="title">没有搜索到文章，换个关键词试试<br />或者<span class="cate" @click="showCate = true">手动筛选</span></div>
+            </div>
+            <a
+                    v-for="(item, index) in results"
+                    :key="index"
+                    target="_blank"
+                    :title="item.title"
+                    :href="item.link"
+            >
+                <p v-for="(details,index) in item.items" :key="index">
+                    {{details.title}}
+                <span is-link>
+                    <div slot="icon" class="item-order" :class="{'time-active':isActive == details.date}">{{index+1}}、</div>
+                    <div slot="label" :class="{'time-active':isActive == details.date}">{{details.date}}<span class="item-from" >{{details.rssTitle}}</span> </div>
+                    <div slot="title" class="item-title"  :class="{'time-active':isActive == details.date}" v-html="details.sotitle || details.title"></div>
+                </span>
+                </p>
+            </a>
+
+            <p v-if="results.length && isBusy">没有更多了~</p>
+
+        </div>
     </div>
 </template>
 
@@ -97,6 +125,10 @@
             const Rss = ref([])
             const Ranges = ref([])
             const HotWords = ref([])
+            const results = ref([])
+            const isLoad = false
+            const isActive = false
+            const isBusy = false
             onMounted(() => {
                 HotWords.value = ['React', 'Vue', 'JavaScript', 'Webpack', 'TypeScript', 'Node', 'CSS', 'Canvas', 'Flutter', 'ES6', '小程序', '浏览器']
                 Ranges.value = [{
@@ -118,6 +150,7 @@
                 }]
                 RssHttp.get(RssApi.Rss.links,false).then((result) => {
                     links.value = JSON.parse(JSON.stringify(result.data))
+                    results.value = JSON.parse(JSON.stringify(result.data))
                 })
                 RssHttp.get(RssApi.Rss.tags,false).then((result) => {
                     Tags.value = JSON.parse(JSON.stringify(result.data))
@@ -139,6 +172,10 @@
                 HotWords,
                 state,
                 searchValue:'',
+                results,
+                isLoad,
+                isActive,
+                isBusy,
 
                 SetshowCate,
                 toTop,
@@ -151,8 +188,9 @@
 
 <style scoped lang="less">
     .container{
-        width: 50%;
+        width: 80%;
         margin: 0 auto;
+        position: relative;
         .fixed-box{
             position: fixed;
             bottom: 100px;
@@ -183,19 +221,36 @@
             }
         }
         .search-modal{
+            left: 0;
             width: 24%;
             height: 100%;
+            position: fixed;
+            max-height: 100%;
+            overflow-y: auto;
+            background-color: #fff;
+            -webkit-transition: -webkit-transform .3s ease-out;
+            transition: -webkit-transform .3s ease-out;
+            transition: transform .3s ease-out;
+            -webkit-overflow-scrolling: touch;
             .title-box{
-                .van-icon{
-                    font-size: 18px;
-                    vertical-align: middle;
-                    margin-right: 6px;
-                    position: relative;
-                    top: -2px;
+                margin: 0;
+                .group__title{
+                    font-size: .9375rem;
+                    color: #333;
+                    background: #f5f5f5;
+                        margin: 0;
+                        dt{
+                            padding: 1rem 1rem .5rem;
+                            color: #969799;
+                            line-height: 1rem;
+                            font-size: 1.125rem;
+                            vertical-align: middle;
+                            margin-right: .375rem;
+                            position: relative;
+                            top: -.125rem;
+                        }
+
                 }
-            }
-            .tag-group{
-                padding: 6px 0;
             }
             .van-tag{
                 background: #bbb;
@@ -215,8 +270,11 @@
             .van-cell{
                 font-size: 13px;
                 color: #262626;
-                text-align: left;
+                text-align: center;
                 cursor: pointer;
+                height: 25px;
+                line-height: 25px;
+                margin: 0;
                 &:hover,
                 &:active{
                     background: #f7f8fa;
@@ -230,6 +288,7 @@
                 color: #999;
                 word-break: break-all;
             }
+
         }
     }
 </style>
